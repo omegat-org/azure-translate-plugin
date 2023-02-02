@@ -52,6 +52,7 @@ import java.awt.Window;
 public class MicrosoftTranslatorAzure extends BaseTranslate {
 
     protected static final String PROPERTY_NEURAL = "microsoft.neural";
+    protected static final String PROPERTY_V2 = "microsoft.v2";
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
 
     @Override
@@ -77,8 +78,13 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
         if (prev != null) {
             return prev;
         }
-        String translation = null;
-        // call V2 or V3
+        MicrosoftTranslatorBase translator;
+        if (isV2()) {
+            translator = new MicrosoftTranslatorV2(this);
+        } else {
+            translator = new AzureTranslatorV3(this);
+        }
+        String translation = translator.translate(sLang, tLang, text);
         if (translation != null) {
             putToCache(sLang, tLang, text, translation);
         }
@@ -90,10 +96,28 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
         return true;
     }
 
+    /**
+     * Whether to use a v2 Neural Machine Translation System.
+     *
+     * @see <a href="https://sourceforge.net/p/omegat/feature-requests/1366/">Add support for
+     * Microsoft neural machine translation</a>
+     */
+    protected static boolean isNeural() {
+        String value = Preferences.getPreference(PROPERTY_NEURAL);
+        return Boolean.parseBoolean(value);
+    }
+
+    protected static boolean isV2() {
+        String value = Preferences.getPreference(PROPERTY_V2);
+        return Boolean.parseBoolean(value);
+    }
+
     @Override
     public void showConfigurationUI(Window parent) {
         JCheckBox neuralCheckBox = new JCheckBox(OStrings.getString("MT_ENGINE_MICROSOFT_NEURAL_LABEL"));
-        neuralCheckBox.setSelected(MicrosoftTranslatorBase.isNeural());
+        neuralCheckBox.setSelected(isNeural());
+        JCheckBox v2CheckBox = new JCheckBox(OStrings.getString("MT_ENGINE_MICROSOFT_V2_LABEL"));
+        v2CheckBox.setSelected(isV2());
 
         MTConfigDialog dialog = new MTConfigDialog(parent, getName()) {
             @Override
@@ -101,9 +125,8 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
                 String key = panel.valueField1.getText().trim();
                 boolean temporary = panel.temporaryCheckBox.isSelected();
                 setCredential(PROPERTY_SUBSCRIPTION_KEY, key, temporary);
-                
-                System.setProperty(PROPERTY_NEURAL, Boolean.toString(neuralCheckBox.isSelected()));
-                Preferences.setPreference(PROPERTY_NEURAL, neuralCheckBox.isSelected());                
+                Preferences.setPreference(PROPERTY_NEURAL, neuralCheckBox.isSelected());
+                Preferences.setPreference(PROPERTY_V2, v2CheckBox.isSelected());
             }
         };
         dialog.panel.valueLabel1.setText(OStrings.getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_LABEL"));
@@ -111,6 +134,7 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
         dialog.panel.valueLabel2.setVisible(false);
         dialog.panel.valueField2.setVisible(false);
         dialog.panel.temporaryCheckBox.setSelected(isCredentialStoredTemporarily(PROPERTY_SUBSCRIPTION_KEY));
+        dialog.panel.itemsPanel.add(v2CheckBox);
         dialog.panel.itemsPanel.add(neuralCheckBox);
 
         dialog.show();

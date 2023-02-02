@@ -53,25 +53,11 @@ import java.util.regex.Pattern;
  */
 public abstract class MicrosoftTranslatorBase {
 
-    protected static final String PROPERTY_NEURAL = "microsoft.neural";
-
     protected static final String URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
 
     protected String accessToken;
 
     protected abstract String translate(Language sLang, Language tLang, String text) throws Exception;
-
-    /**
-     * Whether to use a v2 Neural Machine Translation System.
-     *
-     * @see <a href="https://sourceforge.net/p/omegat/feature-requests/1366/">Add support for
-     * Microsoft neural machine translation</a>
-     */
-    protected static boolean isNeural() {
-        String value = System.getProperty(PROPERTY_NEURAL,
-                Preferences.getPreference(PROPERTY_NEURAL));
-        return Boolean.parseBoolean(value);
-    }
 
     protected void requestToken(String key) throws Exception {
         Map<String, String> headers = new TreeMap<>();

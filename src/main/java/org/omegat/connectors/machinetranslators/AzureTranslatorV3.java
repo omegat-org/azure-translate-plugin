@@ -42,7 +42,7 @@ import org.omegat.util.Language;
  */
 public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
 
-    private MicrosoftTranslatorAzure parent;
+    private final MicrosoftTranslatorAzure parent;
 
     public AzureTranslatorV3(MicrosoftTranslatorAzure parent) {
         this.parent = parent;

@@ -1,4 +1,6 @@
-# Azure Translate V3 plugin for OmegaT
+# Azure Translate V2/V3 plugin for OmegaT
+
+Current status is  pre-alpha, planed to implement but not working.
 
 ## Installation
 

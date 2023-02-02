@@ -11,4 +11,4 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-[Unreleased]: https://github.com/miurahr/omegat-plugin-skelton/compare/v0.1...HEAD
+[Unreleased]: https://github.com/omegat-org/azure-translator-plugin/compare/v0.1...HEAD

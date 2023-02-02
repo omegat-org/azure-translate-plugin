@@ -1,14 +1,12 @@
 plugins {
     java
-    // groovy
-    // kotlin("jvm") version "1.3.72"
     checkstyle
     distribution
     maven
-    id("org.omegat.gradle") version "1.4.2"
+    id("org.omegat.gradle") version "1.5.9"
 }
 
-version = "0.0.1"
+version = "0.1.0"
 
 omegat {
     version = "5.7.1"
@@ -16,14 +14,11 @@ omegat {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:1.7.21")
-    implementation("commons-io:commons-io:2.11.0")
-    implementation("commons-lang:commons-lang:2.6")
-    runtimeOnly("org.slf4j:slf4j-nop:1.7.21")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.13.3")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.13.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.xmlunit:xmlunit-legacy:2.8.3")
-    testImplementation("org.madlonkay.supertmxmerge:supertmxmerge:2.0.1")
-    testImplementation("com.alibaba:fastjson:1.2.17")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
 }
 
 repositories {

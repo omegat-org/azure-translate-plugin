@@ -24,6 +24,7 @@ public class TestMicrosoftTranslatorAzure {
 
     private static final String TOKEN_PATH = "/sts/v1.0/issueToken";
     private static final String V2_API_PATH = "/v2/http.svc/Translate";
+    private static final String key = "abcdefg";
 
     private File tmpDir;
 
@@ -48,7 +49,6 @@ public class TestMicrosoftTranslatorAzure {
         init(prefsFile.getAbsolutePath());
 
         String text = "source text";
-        String key = "abcdefg";
 
         WireMock wireMock = wireMockRuntimeInfo.getWireMock();
         wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
@@ -75,8 +75,7 @@ public class TestMicrosoftTranslatorAzure {
                         .withBody("<string>Translation Text</string>")));
         int port = wireMockRuntimeInfo.getHttpPort();
 
-        MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzure();
-        azure.setKey(key, false);
+        MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzureMock();
         MicrosoftTranslatorV2 translator = new MicrosoftTranslatorV2(azure);
         translator.setTokenUrl(String.format("http://localhost:%d%s", port, TOKEN_PATH));
         translator.setUrl(String.format("http://localhost:%d%s", port, V2_API_PATH));
@@ -89,5 +88,16 @@ public class TestMicrosoftTranslatorAzure {
         Preferences.init();
         Preferences.initFilters();
         Preferences.initSegmentation();
+    }
+
+    static class MicrosoftTranslatorAzureMock extends MicrosoftTranslatorAzure {
+        @Override
+        protected String getKey() {
+            return key;
+        }
+
+        @Override
+        protected void setKey(String val, boolean temporary) {
+        }
     }
 }

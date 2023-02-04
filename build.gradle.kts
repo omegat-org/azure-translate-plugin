@@ -10,11 +10,11 @@ plugins {
     id("org.omegat.gradle") version "1.5.9"
 }
 
-version = "0.1.0"
+version = "0.1.1"
 
 omegat {
     version = "5.7.1"
-    pluginClass = "org.omegat.connectors.machinetranslators.MicrosoftTranslatorAzure"
+    pluginClass = "org.omegat.connectors.machinetranslators.azure.MicrosoftTranslatorAzure"
 }
 
 repositories {

@@ -48,7 +48,8 @@ public class TestMicrosoftTranslatorAzure {
         prefs.setPreference(MicrosoftTranslatorAzure.PROPERTY_NEURAL, false);
         init(prefsFile.getAbsolutePath());
 
-        String text = "source text";
+        String text = "Buy tomorrow";
+        String translation = "Morgen kaufen gehen ein";
 
         WireMock wireMock = wireMockRuntimeInfo.getWireMock();
         wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
@@ -70,15 +71,16 @@ public class TestMicrosoftTranslatorAzure {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
-                        .withBody("<string>Translation Text</string>")));
+                        .withBody("<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">"
+                                + translation + "</string>")));
         int port = wireMockRuntimeInfo.getHttpPort();
 
         MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzureMock();
         MicrosoftTranslatorV2 translator = new MicrosoftTranslatorV2(azure);
         translator.setTokenUrl(String.format("http://localhost:%d%s", port, TOKEN_PATH));
         translator.setUrl(String.format("http://localhost:%d%s", port, V2_API_PATH));
-        String result = translator.translate(new Language("EN"), new Language("DE"), "source text");
-        Assertions.assertEquals("Translation Text", result);
+        String result = translator.translate(new Language("EN"), new Language("DE"), text);
+        Assertions.assertEquals(translation, result);
     }
 
     public static synchronized void init(String configDir) {

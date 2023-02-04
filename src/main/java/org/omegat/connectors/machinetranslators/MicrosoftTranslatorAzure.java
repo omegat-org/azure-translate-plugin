@@ -1,43 +1,44 @@
 /**************************************************************************
- OmegaT - Computer Assisted Translation (CAT) tool
-          with fuzzy matching, translation memory, keyword search,
-          glossaries, and translation leveraging into updated projects.
-
- Copyright (C) 2012 Alex Buloichik, Didier Briel
-               2016-2017 Aaron Madlon-Kay
-               2018 Didier Briel
-               2022,2023 Hiroshi Miura
-               Home page: http://www.omegat.org/
-               Support center: https://omegat.org/support
-
- This file is part of OmegaT.
-
- OmegaT is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- OmegaT is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * OmegaT - Computer Assisted Translation (CAT) tool
+ * with fuzzy matching, translation memory, keyword search,
+ * glossaries, and translation leveraging into updated projects.
+ *
+ * Copyright (C) 2012 Alex Buloichik, Didier Briel
+ * 2016-2017 Aaron Madlon-Kay
+ * 2018 Didier Briel
+ * 2022,2023 Hiroshi Miura
+ * Home page: http://www.omegat.org/
+ * Support center: https://omegat.org/support
+ *
+ * This file is part of OmegaT.
+ *
+ * OmegaT is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * OmegaT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
-
 package org.omegat.connectors.machinetranslators;
 
-import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
 import org.omegat.core.Core;
 import org.omegat.core.CoreEvents;
 import org.omegat.core.events.IProjectEventListener;
 import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
-import org.omegat.util.CredentialsManager;
-import org.omegat.util.Language;
-import org.omegat.util.Preferences;
-import org.omegat.util.StringUtil;
+import org.omegat.util.*;
+
+import java.awt.Window;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.OptionalLong;
+import java.util.ResourceBundle;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -46,9 +47,8 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
 import javax.swing.*;
-import java.awt.Window;
-import java.util.OptionalLong;
-import java.util.ResourceBundle;
+
+import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -139,6 +139,26 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
      */
     @SuppressWarnings("unused")
     public static void loadPlugins() {
+        String requiredVersion = "5.8.0";
+        String requiredUpdate = "0";
+        try {
+            Class<?> clazz = Class.forName("org.omegat.util.VersionChecker");
+            Method compareVersions =
+                    clazz.getMethod("compareVersions", String.class, String.class, String.class, String.class);
+            if ((int) compareVersions.invoke(clazz, OStrings.VERSION, OStrings.UPDATE, requiredVersion, requiredUpdate)
+                    < 0) {
+                Core.pluginLoadingError("MicrosoftTranslatorAzure Plugin cannot be loaded because OmegaT Version "
+                        + OStrings.VERSION + " is lower than required version " + requiredVersion);
+                return;
+            }
+        } catch (ClassNotFoundException
+                | NoSuchMethodException
+                | IllegalAccessException
+                | InvocationTargetException e) {
+            Core.pluginLoadingError(
+                    "MicrosoftTranslatorAzure cannot be loaded because this OmegaT version is not supported");
+            return;
+        }
         Core.registerMachineTranslationClass(MicrosoftTranslatorAzure.class);
     }
 
@@ -292,8 +312,9 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
         dialog.panel.valueLabel2.setVisible(false);
         dialog.panel.valueField2.setVisible(false);
 
-        boolean isCredentialStoredTemporarily = !CredentialsManager.getInstance().isStored(PROPERTY_SUBSCRIPTION_KEY)
-                && !System.getProperty(PROPERTY_SUBSCRIPTION_KEY, "").isEmpty();
+        boolean isCredentialStoredTemporarily =
+                !CredentialsManager.getInstance().isStored(PROPERTY_SUBSCRIPTION_KEY)
+                        && !System.getProperty(PROPERTY_SUBSCRIPTION_KEY, "").isEmpty();
         dialog.panel.temporaryCheckBox.setSelected(isCredentialStoredTemporarily);
         dialog.panel.itemsPanel.add(v2CheckBox);
         dialog.panel.itemsPanel.add(neuralCheckBox);

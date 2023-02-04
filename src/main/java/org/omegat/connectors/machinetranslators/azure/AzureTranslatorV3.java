@@ -25,7 +25,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
-package org.omegat.connectors.machinetranslators;
+package org.omegat.connectors.machinetranslators.azure;
 
 import org.omegat.util.Language;
 
@@ -39,7 +39,15 @@ import org.omegat.util.Language;
  * @see <a href="https://www.microsoft.com/en-us/translator/translatorapi.aspx">Translator API</a>
  * @see <a href="https://docs.microsofttranslator.com/text-translate.html">Translate Method reference</a>
  */
-public abstract class MicrosoftTranslatorBase {
+public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
 
-    protected abstract String translate(Language sLang, Language tLang, String text) throws Exception;
+    private final MicrosoftTranslatorAzure parent;
+
+    public AzureTranslatorV3(MicrosoftTranslatorAzure parent) {
+        this.parent = parent;
+    }
+
+    protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
+        return null;
+    }
 }

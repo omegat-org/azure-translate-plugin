@@ -1,6 +1,10 @@
-package org.omegat.connectors.machinetranslators;
+package org.omegat.connectors.machinetranslators.azure;
 
-import org.omegat.util.*;
+import org.omegat.util.Language;
+import org.omegat.util.Preferences;
+import org.omegat.util.PreferencesImpl;
+import org.omegat.util.PreferencesXML;
+import org.omegat.util.RuntimePreferences;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -71,8 +75,8 @@ public class TestMicrosoftTranslatorAzure {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
-                        .withBody("<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">"
-                                + translation + "</string>")));
+                        .withBody("<string xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">" + translation
+                                + "</string>")));
         int port = wireMockRuntimeInfo.getHttpPort();
 
         MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzureMock();

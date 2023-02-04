@@ -1,5 +1,12 @@
 package org.omegat.connectors.machinetranslators;
 
+import org.omegat.util.*;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -8,16 +15,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.omegat.util.*;
 import wiremock.org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-
 
 @WireMockTest
 public class TestMicrosoftTranslatorAzure {
@@ -58,9 +58,7 @@ public class TestMicrosoftTranslatorAzure {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
-                        .withBody("PSEUDOTOKEN")
-                )
-        );
+                        .withBody("PSEUDOTOKEN")));
         Map<String, StringValuePattern> expectedParams = new HashMap<>();
         expectedParams.put("appid", containing("PSEUDOTOKEN"));
         expectedParams.put("text", equalTo(text));
@@ -97,7 +95,6 @@ public class TestMicrosoftTranslatorAzure {
         }
 
         @Override
-        protected void setKey(String val, boolean temporary) {
-        }
+        protected void setKey(String val, boolean temporary) {}
     }
 }

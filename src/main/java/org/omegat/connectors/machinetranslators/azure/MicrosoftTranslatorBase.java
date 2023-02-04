@@ -41,5 +41,22 @@ import org.omegat.util.Language;
  */
 public abstract class MicrosoftTranslatorBase {
 
+    /**
+     * Converts language codes to Microsoft ones.
+     * @param language
+     *              a project language
+     * @return either a language code, or a Chinese language code plus a Microsoft variant
+     */
+    protected String checkMSLang(Language language) {
+        String lang = language.getLanguage();
+        if (lang.equalsIgnoreCase("zh-cn")) {
+            return "zh-CHS";
+        } else if (lang.equalsIgnoreCase("zh-tw") || lang.equalsIgnoreCase("zh-hk")) {
+            return "zh-CHT";
+        } else {
+            return language.getLanguageCode();
+        }
+    }
+
     protected abstract String translate(Language sLang, Language tLang, String text) throws Exception;
 }

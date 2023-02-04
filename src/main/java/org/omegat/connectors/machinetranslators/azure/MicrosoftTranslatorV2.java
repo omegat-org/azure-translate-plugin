@@ -119,22 +119,7 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
         return translation;
     }
 
-    /**
-     * Converts language codes to Microsoft ones.
-     * @param language
-     *              a project language
-     * @return either a language code, or a Chinese language code plus a Microsoft variant
-     */
-    private String checkMSLang(Language language) {
-        String lang = language.getLanguage();
-        if (lang.equalsIgnoreCase("zh-cn")) {
-            return "zh-CHS";
-        } else if (lang.equalsIgnoreCase("zh-tw") || lang.equalsIgnoreCase("zh-hk")) {
-            return "zh-CHT";
-        } else {
-            return language.getLanguageCode();
-        }
-    }
+
 
     private String requestTranslate(String langFrom, String langTo, String text) throws Exception {
         Map<String, String> p = new TreeMap<>();

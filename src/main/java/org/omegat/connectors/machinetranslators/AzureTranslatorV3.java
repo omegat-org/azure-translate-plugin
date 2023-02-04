@@ -48,12 +48,6 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
         this.parent = parent;
     }
 
-    @Override
-    protected void setUrl(String url) {
-
-    }
-
-    @Override
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
         return null;
     }

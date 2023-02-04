@@ -25,6 +25,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:2.13.4")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.13.4")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
+    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
+    implementation("com.github.ben-manes.caffeine:jcache:2.9.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
 }

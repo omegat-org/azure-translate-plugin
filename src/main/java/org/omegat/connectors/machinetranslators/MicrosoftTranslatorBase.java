@@ -28,12 +28,7 @@
 
 package org.omegat.connectors.machinetranslators;
 
-import org.omegat.util.HttpConnectionUtils;
 import org.omegat.util.Language;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -47,29 +42,6 @@ import java.util.TreeMap;
  */
 public abstract class MicrosoftTranslatorBase {
 
-    protected static final String DEFAULT_URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
-    private String urlToken;
-
-    protected String accessToken;
-
-    public MicrosoftTranslatorBase() {
-        this.urlToken = DEFAULT_URL_TOKEN;
-    }
-
-    protected void setTokenUrl(String url) {
-        urlToken = url;
-    }
-
-    protected abstract void setUrl(String url);
-
     protected abstract String translate(Language sLang, Language tLang, String text) throws Exception;
-
-    protected void requestToken(String key) throws Exception {
-        Map<String, String> headers = new TreeMap<>();
-        headers.put("Ocp-Apim-Subscription-Key", key);
-        headers.put("Content-Type", "application/json");
-        headers.put("Accept", "application/jwt");
-        accessToken = HttpConnectionUtils.post(urlToken, Collections.emptyMap(), headers);
-    }
 
 }

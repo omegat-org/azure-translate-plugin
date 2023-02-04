@@ -28,16 +28,26 @@
 
 package org.omegat.connectors.machinetranslators;
 
+import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
 import org.omegat.core.Core;
-import org.omegat.core.machinetranslators.BaseTranslate;
+import org.omegat.core.CoreEvents;
+import org.omegat.core.events.IProjectEventListener;
 import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
+import org.omegat.util.CredentialsManager;
 import org.omegat.util.Language;
 import org.omegat.util.Preferences;
 import org.omegat.util.StringUtil;
 
-import javax.swing.JCheckBox;
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.expiry.CreatedExpiryPolicy;
+import javax.cache.expiry.Duration;
+import javax.cache.spi.CachingProvider;
+import javax.swing.*;
 import java.awt.Window;
+import java.util.OptionalLong;
 import java.util.ResourceBundle;
 
 /**
@@ -51,9 +61,11 @@ import java.util.ResourceBundle;
  * @see <a href="https://www.microsoft.com/en-us/translator/translatorapi.aspx">Translator API</a>
  * @see <a href="https://docs.microsofttranslator.com/text-translate.html">Translate Method reference</a>
  */
-public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineTranslation {
+public class MicrosoftTranslatorAzure implements IMachineTranslation {
 
-    public static final String ALLOW_MICROSOFT_TRANSLATOR_AZURE = "allow_microsoft_translator_azure";
+    protected boolean enabled;
+
+    protected static final String ALLOW_MICROSOFT_TRANSLATOR_AZURE = "allow_microsoft_translator_azure";
 
     protected static final String PROPERTY_NEURAL = "microsoft.neural";
     protected static final String PROPERTY_V2 = "microsoft.v2";
@@ -61,8 +73,61 @@ public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineT
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("AzureTranslatorBundle");
 
+    /**
+     * Machine translation implementation can use this cache for skip requests
+     * twice. Cache will be cleared when project change.
+     */
+    private final Cache<String, String> cache;
+
     public MicrosoftTranslatorAzure() {
-        super();
+        if (Core.getMainWindow() != null) {
+            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem();
+            menuItem.setText(getName());
+            menuItem.addActionListener(e -> setEnabled(menuItem.isSelected()));
+            enabled = Preferences.isPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE);
+            menuItem.setState(enabled);
+            Core.getMainWindow().getMainMenu().getMachineTranslationMenu().add(menuItem);
+            // Preferences listener
+            Preferences.addPropertyChangeListener(ALLOW_MICROSOFT_TRANSLATOR_AZURE, e -> {
+                boolean newValue = (Boolean) e.getNewValue();
+                menuItem.setSelected(newValue);
+                enabled = newValue;
+            });
+        }
+
+        cache = getCacheLayer(getName());
+        setCacheClearPolicy();
+    }
+
+    /**
+     * Creat cache object.
+     * <p>
+     * MT connectors can override cache size and invalidate policy.
+     * @param name name of cache which should be unique among MT connectors.
+     * @return Cache object
+     */
+    protected Cache<String, String> getCacheLayer(String name) {
+        CachingProvider provider = Caching.getCachingProvider();
+        CacheManager manager = provider.getCacheManager();
+        Cache<String, String> cache1 = manager.getCache(name);
+        if (cache1 != null) {
+            return cache1;
+        }
+        CaffeineConfiguration<String, String> config = new CaffeineConfiguration<>();
+        config.setExpiryPolicyFactory(() -> new CreatedExpiryPolicy(Duration.ONE_DAY));
+        config.setMaximumSize(OptionalLong.of(1_000));
+        return manager.createCache(name, config);
+    }
+
+    /**
+     * Register cache clear policy.
+     */
+    protected void setCacheClearPolicy() {
+        CoreEvents.registerProjectChangeListener(eventType -> {
+            if (eventType.equals(IProjectEventListener.PROJECT_CHANGE_TYPE.CLOSE)) {
+                cache.clear();
+            }
+        });
     }
 
     public static String getString(String key) {
@@ -84,13 +149,65 @@ public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineT
     @SuppressWarnings("unused")
     public static void unloadPlugins() {}
 
-    @Override
-    protected String getPreferenceName() {
-        return Preferences.ALLOW_MICROSOFT_TRANSLATOR_AZURE;
-    }
-
     public String getName() {
         return getString("MT_ENGINE_MICROSOFT_AZURE");
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
+    }
+
+    @Override
+    public String getTranslation(Language sLang, Language tLang, String text) throws Exception {
+        if (enabled) {
+            return translate(sLang, tLang, text);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public String getCachedTranslation(Language sLang, Language tLang, String text) {
+        if (enabled) {
+            return getFromCache(sLang, tLang, text);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Store a credential. Credentials are stored in temporary system properties and, if
+     * <code>temporary</code> is <code>false</code>, in the program's persistent preferences encoded in
+     * Base64. Retrieve a credential with {@link #getCredential(String)}.
+     *
+     * @param id
+     *            ID or key of the credential to store
+     * @param value
+     *            value of the credential to store
+     * @param temporary
+     *            if <code>false</code>, encode with Base64 and store in persistent preferences as well
+     */
+    protected void setCredential(String id, String value, boolean temporary) {
+        System.setProperty(id, value);
+        CredentialsManager.getInstance().store(id, temporary ? "" : value);
+    }
+
+    /**
+     * Retrieve a credential with the given ID. First checks temporary system properties, then falls back to
+     * the program's persistent preferences. Store a credential with
+     * {@link #setCredential(String, String, boolean)}.
+     *
+     * @param id
+     *            ID or key of the credential to retrieve
+     * @return the credential value in plain text
+     */
+    protected String getCredential(String id) {
+        String property = System.getProperty(id);
+        if (property != null) {
+            return property;
+        }
+        return CredentialsManager.getInstance().retrieve(id).orElse("");
     }
 
     protected void setKey(String key, boolean temporary) {
@@ -105,7 +222,6 @@ public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineT
         return key;
     }
 
-    @Override
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
         String prev = getFromCache(sLang, tLang, text.length() > 10000 ? text.substring(0, 9997) + "..." : text);
         if (prev != null) {
@@ -122,6 +238,14 @@ public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineT
             putToCache(sLang, tLang, text, translation);
         }
         return translation;
+    }
+
+    protected String getFromCache(Language sLang, Language tLang, String text) {
+        return cache.get(sLang + "/" + tLang + "/" + text);
+    }
+
+    protected void putToCache(Language sLang, Language tLang, String text, String result) {
+        cache.put(sLang.toString() + "/" + tLang.toString() + "/" + text, result);
     }
 
     @Override
@@ -167,7 +291,10 @@ public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineT
         dialog.panel.valueField1.setText(getCredential(PROPERTY_SUBSCRIPTION_KEY));
         dialog.panel.valueLabel2.setVisible(false);
         dialog.panel.valueField2.setVisible(false);
-        dialog.panel.temporaryCheckBox.setSelected(isCredentialStoredTemporarily(PROPERTY_SUBSCRIPTION_KEY));
+
+        boolean isCredentialStoredTemporarily = !CredentialsManager.getInstance().isStored(PROPERTY_SUBSCRIPTION_KEY)
+                && !System.getProperty(PROPERTY_SUBSCRIPTION_KEY, "").isEmpty();
+        dialog.panel.temporaryCheckBox.setSelected(isCredentialStoredTemporarily);
         dialog.panel.itemsPanel.add(v2CheckBox);
         dialog.panel.itemsPanel.add(neuralCheckBox);
 

@@ -32,6 +32,7 @@ import org.omegat.util.HttpConnectionUtils;
 import org.omegat.util.Language;
 import org.omegat.util.Log;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -49,6 +50,11 @@ import java.util.regex.Pattern;
  */
 public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
 
+    protected static final String DEFAULT_URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
+    protected String urlToken;
+
+    protected String accessToken;
+
     private static final String DEFAULT_URL = "https://api.microsofttranslator.com/v2/http.svc/Translate";
     protected static final Pattern RE_RESPONSE = Pattern.compile("<string[^>]*>(.+)</string>");
 
@@ -59,6 +65,19 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
     public MicrosoftTranslatorV2(MicrosoftTranslatorAzure parent) {
         this.parent = parent;
         urlTranslate = DEFAULT_URL;
+        urlToken = DEFAULT_URL_TOKEN;
+    }
+
+    protected void setTokenUrl(String url) {
+        urlToken = url;
+    }
+
+    protected void requestToken(String key) throws Exception {
+        Map<String, String> headers = new TreeMap<>();
+        headers.put("Ocp-Apim-Subscription-Key", key);
+        headers.put("Content-Type", "application/json");
+        headers.put("Accept", "application/jwt");
+        accessToken = HttpConnectionUtils.post(urlToken, Collections.emptyMap(), headers);
     }
 
     /**

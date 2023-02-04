@@ -51,12 +51,10 @@ public class TestMicrosoftTranslatorAzure {
         String key = "abcdefg";
 
         WireMock wireMock = wireMockRuntimeInfo.getWireMock();
-        Map<String, StringValuePattern> headers = new HashMap<>();
-        headers.put("Ocp-Apim-Subscription-Key", equalTo(key));
-        headers.put("Content-Type", equalTo("application/json"));
-        headers.put("Accept", equalTo("application/jwt"));
-        wireMock.register(get(urlPathEqualTo(TOKEN_PATH))
-                .withQueryParams(headers)
+        wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
+                .withHeader("Content-Type", equalTo("application/json"))
+                .withHeader("Accept", equalTo("application/jwt"))
+                .withHeader("Ocp-Apim-Subscription-Key", equalTo(key))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -64,6 +62,7 @@ public class TestMicrosoftTranslatorAzure {
                 )
         );
         Map<String, StringValuePattern> expectedParams = new HashMap<>();
+        expectedParams.put("appid", containing("PSEUDOTOKEN"));
         expectedParams.put("text", equalTo(text));
         expectedParams.put("from", equalTo("en"));
         expectedParams.put("to", equalTo("de"));
@@ -78,10 +77,10 @@ public class TestMicrosoftTranslatorAzure {
 
         MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzure();
         azure.setKey(key, false);
-        MicrosoftTranslatorBase translator = new MicrosoftTranslatorV2(azure);
-        String result = translator.translate(new Language("EN"), new Language("DE"), "source text");
+        MicrosoftTranslatorV2 translator = new MicrosoftTranslatorV2(azure);
         translator.setTokenUrl(String.format("http://localhost:%d%s", port, TOKEN_PATH));
         translator.setUrl(String.format("http://localhost:%d%s", port, V2_API_PATH));
+        String result = translator.translate(new Language("EN"), new Language("DE"), "source text");
         Assertions.assertEquals("Translation Text", result);
     }
 

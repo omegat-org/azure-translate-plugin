@@ -175,7 +175,12 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean b) {
+        enabled = b;
     }
 
     @Override

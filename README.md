@@ -1,6 +1,7 @@
 # Azure Translate V2/V3 plugin for OmegaT
 
-Current status is  pre-alpha, planed to implement v3 support. v2 support is ported from OmegaT.
+Current status is  pre-alpha, planed to implement v3 support but not yet.
+Microsoft Translator v2 support is ported from OmegaT.
 
 ## Installation
 

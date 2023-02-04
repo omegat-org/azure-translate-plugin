@@ -6,7 +6,7 @@
  Copyright (C) 2012 Alex Buloichik, Didier Briel
                2016-2017 Aaron Madlon-Kay
                2018 Didier Briel
-               2022 Hiroshi Miura
+               2022,2023 Hiroshi Miura
                Home page: http://www.omegat.org/
                Support center: https://omegat.org/support
 
@@ -28,18 +28,12 @@
 
 package org.omegat.connectors.machinetranslators;
 
-import org.omegat.core.machinetranslators.BaseTranslate;
-import org.omegat.gui.exttrans.MTConfigDialog;
-import org.omegat.util.*;
+import org.omegat.util.HttpConnectionUtils;
+import org.omegat.util.Language;
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Support for Microsoft Translator API machine translation.

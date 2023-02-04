@@ -6,7 +6,7 @@
  Copyright (C) 2012 Alex Buloichik, Didier Briel
                2016-2017 Aaron Madlon-Kay
                2018 Didier Briel
-               2022 Hiroshi Miura
+               2022,2023 Hiroshi Miura
                Home page: http://www.omegat.org/
                Support center: https://omegat.org/support
 
@@ -101,7 +101,7 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
     }
 
     private String requestTranslate(String langFrom, String langTo, String text) throws Exception {
-        Map<String, String> p = new TreeMap<String, String>();
+        Map<String, String> p = new TreeMap<>();
         p.put("appid", "Bearer " + accessToken);
         p.put("text", text);
         p.put("from", langFrom);

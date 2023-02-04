@@ -6,7 +6,7 @@
  Copyright (C) 2012 Alex Buloichik, Didier Briel
                2016-2017 Aaron Madlon-Kay
                2018 Didier Briel
-               2022 Hiroshi Miura
+               2022,2023 Hiroshi Miura
                Home page: http://www.omegat.org/
                Support center: https://omegat.org/support
 
@@ -28,15 +28,16 @@
 
 package org.omegat.connectors.machinetranslators;
 
+import org.omegat.core.Core;
 import org.omegat.core.machinetranslators.BaseTranslate;
 import org.omegat.gui.exttrans.MTConfigDialog;
 import org.omegat.util.Language;
-import org.omegat.util.OStrings;
 import org.omegat.util.Preferences;
 import org.omegat.util.StringUtil;
 
 import javax.swing.JCheckBox;
 import java.awt.Window;
+import java.util.ResourceBundle;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -55,19 +56,40 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
     protected static final String PROPERTY_V2 = "microsoft.v2";
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
 
+    private static final ResourceBundle bundle = ResourceBundle.getBundle("AzureTranslatorBundle");
+
+    public static String getString(String key) {
+        return bundle.getString(key);
+    }
+
+    /**
+     * Register plugin into OmegaT.
+     */
+    @SuppressWarnings("unused")
+    public static void loadPlugins() {
+        Core.registerMachineTranslationClass(MicrosoftTranslatorAzure.class);
+    }
+
+    /**
+     * Unregister plugin.
+     * Currently not supported.
+     */
+    @SuppressWarnings("unused")
+    public static void unloadPlugins() {}
+
     @Override
     protected String getPreferenceName() {
         return Preferences.ALLOW_MICROSOFT_TRANSLATOR_AZURE;
     }
 
     public String getName() {
-        return OStrings.getString("MT_ENGINE_MICROSOFT_AZURE");
+        return getString("MT_ENGINE_MICROSOFT_AZURE");
     }
 
     protected String getKey() throws Exception {
         String key = getCredential(PROPERTY_SUBSCRIPTION_KEY);
         if (StringUtil.isEmpty(key)) {
-            throw new Exception(OStrings.getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_NOTFOUND"));
+            throw new Exception(getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_NOTFOUND"));
         }
         return key;
     }
@@ -114,10 +136,12 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
 
     @Override
     public void showConfigurationUI(Window parent) {
-        JCheckBox neuralCheckBox = new JCheckBox(OStrings.getString("MT_ENGINE_MICROSOFT_NEURAL_LABEL"));
+        JCheckBox neuralCheckBox = new JCheckBox(getString("MT_ENGINE_MICROSOFT_NEURAL_LABEL"));
         neuralCheckBox.setSelected(isNeural());
-        JCheckBox v2CheckBox = new JCheckBox(OStrings.getString("MT_ENGINE_MICROSOFT_V2_LABEL"));
+        JCheckBox v2CheckBox = new JCheckBox(getString("MT_ENGINE_MICROSOFT_V2_LABEL"));
         v2CheckBox.setSelected(isV2());
+        neuralCheckBox.setEnabled(isV2());
+        v2CheckBox.addActionListener(e -> neuralCheckBox.setEnabled(v2CheckBox.isSelected()));
 
         MTConfigDialog dialog = new MTConfigDialog(parent, getName()) {
             @Override
@@ -129,7 +153,7 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
                 Preferences.setPreference(PROPERTY_V2, v2CheckBox.isSelected());
             }
         };
-        dialog.panel.valueLabel1.setText(OStrings.getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_LABEL"));
+        dialog.panel.valueLabel1.setText(getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_LABEL"));
         dialog.panel.valueField1.setText(getCredential(PROPERTY_SUBSCRIPTION_KEY));
         dialog.panel.valueLabel2.setVisible(false);
         dialog.panel.valueField2.setVisible(false);

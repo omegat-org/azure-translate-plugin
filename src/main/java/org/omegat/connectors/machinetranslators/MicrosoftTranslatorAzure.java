@@ -30,6 +30,7 @@ package org.omegat.connectors.machinetranslators;
 
 import org.omegat.core.Core;
 import org.omegat.core.machinetranslators.BaseTranslate;
+import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
 import org.omegat.util.Language;
 import org.omegat.util.Preferences;
@@ -50,13 +51,19 @@ import java.util.ResourceBundle;
  * @see <a href="https://www.microsoft.com/en-us/translator/translatorapi.aspx">Translator API</a>
  * @see <a href="https://docs.microsofttranslator.com/text-translate.html">Translate Method reference</a>
  */
-public class MicrosoftTranslatorAzure extends BaseTranslate {
+public class MicrosoftTranslatorAzure extends BaseTranslate implements IMachineTranslation {
+
+    public static final String ALLOW_MICROSOFT_TRANSLATOR_AZURE = "allow_microsoft_translator_azure";
 
     protected static final String PROPERTY_NEURAL = "microsoft.neural";
     protected static final String PROPERTY_V2 = "microsoft.v2";
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("AzureTranslatorBundle");
+
+    public MicrosoftTranslatorAzure() {
+        super();
+    }
 
     public static String getString(String key) {
         return bundle.getString(key);
@@ -84,6 +91,10 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
 
     public String getName() {
         return getString("MT_ENGINE_MICROSOFT_AZURE");
+    }
+
+    protected void setKey(String key, boolean temporary) {
+        setCredential(PROPERTY_SUBSCRIPTION_KEY, key, temporary);
     }
 
     protected String getKey() throws Exception {
@@ -142,13 +153,12 @@ public class MicrosoftTranslatorAzure extends BaseTranslate {
         v2CheckBox.setSelected(isV2());
         neuralCheckBox.setEnabled(isV2());
         v2CheckBox.addActionListener(e -> neuralCheckBox.setEnabled(v2CheckBox.isSelected()));
+        v2CheckBox.setToolTipText(getString("MT_ENGINE_MICROSOFT_V3_NOT_IMPLEMENTED"));
 
         MTConfigDialog dialog = new MTConfigDialog(parent, getName()) {
             @Override
             protected void onConfirm() {
-                String key = panel.valueField1.getText().trim();
-                boolean temporary = panel.temporaryCheckBox.isSelected();
-                setCredential(PROPERTY_SUBSCRIPTION_KEY, key, temporary);
+                setKey(panel.valueField1.getText().trim(), panel.temporaryCheckBox.isSelected());
                 Preferences.setPreference(PROPERTY_NEURAL, neuralCheckBox.isSelected());
                 Preferences.setPreference(PROPERTY_V2, v2CheckBox.isSelected());
             }

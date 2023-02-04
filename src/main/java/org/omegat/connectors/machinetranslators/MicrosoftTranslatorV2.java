@@ -49,16 +49,34 @@ import java.util.regex.Pattern;
  */
 public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
 
-    protected static final String URL_TRANSLATE = "https://api.microsofttranslator.com/v2/http.svc/Translate";
+    private static final String DEFAULT_URL = "https://api.microsofttranslator.com/v2/http.svc/Translate";
     protected static final Pattern RE_RESPONSE = Pattern.compile("<string[^>]*>(.+)</string>");
 
+    private String urlTranslate;
 
     private final MicrosoftTranslatorAzure parent;
 
     public MicrosoftTranslatorV2(MicrosoftTranslatorAzure parent) {
         this.parent = parent;
+        urlTranslate = DEFAULT_URL;
     }
 
+    /**
+     * Method for test.
+     * @param url alternative url.
+     */
+    public void setUrl(String url) {
+        urlTranslate = url;
+    }
+
+    /**
+     * translate text.
+     * @param sLang source langauge.
+     * @param tLang target language.
+     * @param text source text.
+     * @return translated text.
+     * @throws Exception when connection error.
+     */
     @Override
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
         String langFrom = checkMSLang(sLang);
@@ -111,7 +129,7 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
             p.put("category", "generalnn");
         }
 
-        String r = HttpConnectionUtils.get(URL_TRANSLATE, p, null);
+        String r = HttpConnectionUtils.get(urlTranslate, p, null);
         Matcher m = RE_RESPONSE.matcher(r);
         if (m.matches()) {
             String translatedText = m.group(1);

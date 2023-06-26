@@ -32,6 +32,11 @@ import org.omegat.core.CoreEvents;
 import org.omegat.core.events.IProjectEventListener;
 import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
+import org.omegat.util.CredentialsManager;
+import org.omegat.util.Language;
+import org.omegat.util.OStrings;
+import org.omegat.util.Preferences;
+import org.omegat.util.StringUtil;
 
 import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
@@ -49,11 +54,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 
 import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
-import org.omegat.util.CredentialsManager;
-import org.omegat.util.Language;
-import org.omegat.util.OStrings;
-import org.omegat.util.Preferences;
-import org.omegat.util.StringUtil;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -267,7 +267,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
         if (isV2() && (translator == null || translator instanceof AzureTranslatorV3)) {
             translator = new MicrosoftTranslatorV2(this);
-        } else if (translator == null || translator instanceof MicrosoftTranslatorV2){
+        } else if (translator == null || translator instanceof MicrosoftTranslatorV2) {
             translator = new AzureTranslatorV3(this);
         }
         return translator.translate(sLang, tLang, text);

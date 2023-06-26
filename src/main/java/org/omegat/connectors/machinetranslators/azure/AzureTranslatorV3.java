@@ -27,12 +27,13 @@
  */
 package org.omegat.connectors.machinetranslators.azure;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.omegat.util.HttpConnectionUtils;
 
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -84,5 +85,4 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
     public void setUrl(String url) {
         urlTranslate = url;
     }
-
 }

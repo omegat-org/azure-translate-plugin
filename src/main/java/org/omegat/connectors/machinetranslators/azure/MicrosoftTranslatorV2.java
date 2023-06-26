@@ -55,7 +55,6 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
 
     private String urlTranslate;
 
-
     public MicrosoftTranslatorV2(MicrosoftTranslatorAzure parent) {
         super(parent);
         urlTranslate = DEFAULT_URL;

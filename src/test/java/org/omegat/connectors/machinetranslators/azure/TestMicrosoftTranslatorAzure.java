@@ -48,7 +48,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import wiremock.org.apache.commons.io.FileUtils;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 @WireMockTest
 public class TestMicrosoftTranslatorAzure {
@@ -173,5 +178,4 @@ public class TestMicrosoftTranslatorAzure {
         String result = translator.translate(new Language("EN"), new Language("DE"), text);
         Assertions.assertEquals(translation, result);
     }
-
 }

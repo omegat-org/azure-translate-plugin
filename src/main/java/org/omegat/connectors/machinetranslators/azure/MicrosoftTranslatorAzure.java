@@ -76,7 +76,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     protected static final String PROPERTY_V2 = "microsoft.v2";
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
 
-    private static final ResourceBundle bundle = ResourceBundle.getBundle("AzureTranslatorBundle");
+    private static final ResourceBundle BUNDLE = ResourceBundle.getBundle("AzureTranslatorBundle");
 
     private MicrosoftTranslatorBase translator = null;
 
@@ -86,6 +86,9 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
      */
     private final Cache<String, String> cache;
 
+    /**
+     * Constructor of the connector.
+     */
     public MicrosoftTranslatorAzure() {
         if (Core.getMainWindow() != null) {
             JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem();
@@ -137,8 +140,13 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
         });
     }
 
+    /**
+     * Utility function to get a localized message.
+     * @param key bundle key.
+     * @return a localized string.
+     */
     public static String getString(String key) {
-        return bundle.getString(key);
+        return BUNDLE.getString(key);
     }
 
     /**
@@ -176,6 +184,10 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     @SuppressWarnings("unused")
     public static void unloadPlugins() {}
 
+    /**
+     * Return a name of the connector.
+     * @return connector name.
+     */
     public String getName() {
         return getString("MT_ENGINE_MICROSOFT_AZURE");
     }
@@ -202,7 +214,12 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     @Override
     public String getCachedTranslation(Language sLang, Language tLang, String text) {
         if (enabled) {
-            String prev = getFromCache(sLang, tLang, text.length() > 10000 ? text.substring(0, 9997) + "..." : text);
+            String prev;
+            if (text.length() > 10000) {
+                prev = getFromCache(sLang, tLang, text.substring(0, 9997) + "...");
+            } else {
+                prev = getFromCache(sLang, tLang, text);
+            }
             if (prev != null) {
                 return prev;
             }
@@ -232,7 +249,11 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
      */
     protected void setCredential(String id, String value, boolean temporary) {
         System.setProperty(id, value);
-        CredentialsManager.getInstance().store(id, temporary ? "" : value);
+        if (temporary) {
+            CredentialsManager.getInstance().store(id, "");
+        } else {
+            CredentialsManager.getInstance().store(id, value);
+        }
     }
 
     /**

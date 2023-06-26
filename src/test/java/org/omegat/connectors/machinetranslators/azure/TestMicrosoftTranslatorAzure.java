@@ -34,6 +34,7 @@ import org.omegat.util.PreferencesXML;
 import org.omegat.util.RuntimePreferences;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,27 +56,43 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
+/**
+ * @author Hiroshi Miura
+ */
 @WireMockTest
 public class TestMicrosoftTranslatorAzure {
 
     private static final String TOKEN_PATH = "/sts/v1.0/issueToken";
     private static final String V2_API_PATH = "/v2/http.svc/Translate";
     private static final String V3_API_PATH = "/translate";
-    private static final String key = "abcdefg";
+    private static final String KEY = "abcdefg";
 
     private File tmpDir;
 
+    /**
+     * Prepare a temporary directory.
+     * @throws IOException when I/O error.
+     */
     @BeforeEach
-    public final void setUp() throws Exception {
+    public final void setUp() throws IOException {
         tmpDir = Files.createTempDirectory("omegat").toFile();
         Assertions.assertTrue(tmpDir.isDirectory());
     }
 
+    /**
+     * Clean up a temporary directory.
+     * @throws IOException when I/O error.
+     */
     @AfterEach
-    public final void tearDown() throws Exception {
+    public final void tearDown() throws IOException {
         FileUtils.deleteDirectory(tmpDir);
     }
 
+    /**
+     * Check microsoft translator legacy v2 connection.
+     * @param wireMockRuntimeInfo wiremock
+     * @throws Exception when I/O error.
+     */
     @Test
     void testResponseV2(WireMockRuntimeInfo wireMockRuntimeInfo) throws Exception {
         File prefsFile = new File(tmpDir, Preferences.FILE_PREFERENCES);
@@ -92,7 +109,7 @@ public class TestMicrosoftTranslatorAzure {
         wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
                 .withHeader("Content-Type", equalTo("application/json"))
                 .withHeader("Accept", equalTo("application/jwt"))
-                .withHeader("Ocp-Apim-Subscription-Key", equalTo(key))
+                .withHeader("Ocp-Apim-Subscription-Key", equalTo(KEY))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
@@ -120,6 +137,10 @@ public class TestMicrosoftTranslatorAzure {
         Assertions.assertEquals(translation, result);
     }
 
+    /**
+     * Initialize preferences for test.
+     * @param configDir to create omegat.prefs.
+     */
     public static synchronized void init(String configDir) {
         RuntimePreferences.setConfigDir(configDir);
         Preferences.init();
@@ -127,10 +148,13 @@ public class TestMicrosoftTranslatorAzure {
         Preferences.initSegmentation();
     }
 
+    /**
+     * A mock for parent class.
+     */
     static class MicrosoftTranslatorAzureMock extends MicrosoftTranslatorAzure {
         @Override
         protected String getKey() {
-            return key;
+            return KEY;
         }
 
         @Override
@@ -153,7 +177,7 @@ public class TestMicrosoftTranslatorAzure {
         wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
                 .withHeader("Content-Type", equalTo("application/json"))
                 .withHeader("Accept", equalTo("application/jwt"))
-                .withHeader("Ocp-Apim-Subscription-Key", equalTo(key))
+                .withHeader("Ocp-Apim-Subscription-Key", equalTo(KEY))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")

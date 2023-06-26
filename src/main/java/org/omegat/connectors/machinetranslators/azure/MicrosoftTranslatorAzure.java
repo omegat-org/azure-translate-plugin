@@ -32,7 +32,6 @@ import org.omegat.core.CoreEvents;
 import org.omegat.core.events.IProjectEventListener;
 import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
-import org.omegat.util.*;
 
 import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
@@ -46,9 +45,15 @@ import javax.cache.Caching;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
-import javax.swing.*;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 
 import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
+import org.omegat.util.CredentialsManager;
+import org.omegat.util.Language;
+import org.omegat.util.OStrings;
+import org.omegat.util.Preferences;
+import org.omegat.util.StringUtil;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -72,6 +77,8 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("AzureTranslatorBundle");
+
+    private MicrosoftTranslatorBase translator = null;
 
     /**
      * Machine translation implementation can use this cache for skip requests
@@ -195,10 +202,20 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     @Override
     public String getCachedTranslation(Language sLang, Language tLang, String text) {
         if (enabled) {
-            return getFromCache(sLang, tLang, text);
-        } else {
-            return null;
+            String prev = getFromCache(sLang, tLang, text.length() > 10000 ? text.substring(0, 9997) + "..." : text);
+            if (prev != null) {
+                return prev;
+            }
+            try {
+                String translation = translate(sLang, tLang, text);
+                if (translation != null) {
+                    putToCache(sLang, tLang, text, translation);
+                }
+                return translation;
+            } catch (Exception ignored) {
+            }
         }
+        return null;
     }
 
     /**
@@ -248,21 +265,12 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     }
 
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
-        String prev = getFromCache(sLang, tLang, text.length() > 10000 ? text.substring(0, 9997) + "..." : text);
-        if (prev != null) {
-            return prev;
-        }
-        MicrosoftTranslatorBase translator;
-        if (isV2()) {
+        if (isV2() && (translator == null || translator instanceof AzureTranslatorV3)) {
             translator = new MicrosoftTranslatorV2(this);
-        } else {
+        } else if (translator == null || translator instanceof MicrosoftTranslatorV2){
             translator = new AzureTranslatorV3(this);
         }
-        String translation = translator.translate(sLang, tLang, text);
-        if (translation != null) {
-            putToCache(sLang, tLang, text, translation);
-        }
-        return translation;
+        return translator.translate(sLang, tLang, text);
     }
 
     protected String getFromCache(Language sLang, Language tLang, String text) {

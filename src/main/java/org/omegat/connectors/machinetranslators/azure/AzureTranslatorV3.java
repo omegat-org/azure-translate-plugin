@@ -27,7 +27,12 @@
  */
 package org.omegat.connectors.machinetranslators.azure;
 
+import org.omegat.util.HttpConnectionUtils;
 import org.omegat.util.Language;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -41,13 +46,25 @@ import org.omegat.util.Language;
  */
 public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
 
-    private final MicrosoftTranslatorAzure parent;
+    private static final String DEFAULT_URL = "https://api.cognitive.microsofttranslator.com/translate";
+    private String urlTranslate;
 
     public AzureTranslatorV3(MicrosoftTranslatorAzure parent) {
-        this.parent = parent;
+        super(parent);
+        urlTranslate = DEFAULT_URL;
     }
 
-    protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
+    @Override
+    protected String requestTranslate(String langFrom, String langTo, String text) throws Exception {
         return null;
     }
+
+    /**
+     * Method for test.
+     * @param url alternative url.
+     */
+    public void setUrl(String url) {
+        urlTranslate = url;
+    }
+
 }

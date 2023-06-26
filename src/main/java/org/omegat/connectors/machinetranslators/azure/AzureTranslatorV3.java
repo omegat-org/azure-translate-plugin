@@ -37,34 +37,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Support for Microsoft Translator API machine translation.
- *
- * @author Alex Buloichik (alex73mail@gmail.com)
- * @author Didier Briel
- * @author Aaron Madlon-Kay
- *
- * @see <a href="https://www.microsoft.com/en-us/translator/translatorapi.aspx">Translator API</a>
- * @see <a href="https://docs.microsofttranslator.com/text-translate.html">Translate Method reference</a>
+ * @author Hiroshi Miura
  */
 public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
 
-    private static final String DEFAULT_URL = "https://api.cognitive.microsofttranslator.com/translate";
+    private static final String DEFAULT_URL = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0";
+
     private String urlTranslate;
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public AzureTranslatorV3(MicrosoftTranslatorAzure parent) {
         super(parent);
         urlTranslate = DEFAULT_URL;
-        mapper = new ObjectMapper();
     }
+
+    protected void requestToken(String key) {}
 
     @Override
     protected String requestTranslate(String langFrom, String langTo, String text) throws Exception {
         Map<String, String> p = new TreeMap<>();
-        p.put("Authentication", "Bearer " + accessToken);
+        p.put("Ocp-Apim-Subscription-Key", parent.getKey());
+        p.put("Ocp-Apim-Subscription-Region", parent.getRegion());
         StringBuilder urlBuilder = new StringBuilder(urlTranslate);
-        urlBuilder.append("?from=").append(langFrom).append("&").append("to=").append(langTo);
-        urlBuilder.append("&api-version=3.0");
-        String json = "[{'Text': '" + text + "'}]";
+        urlBuilder.append("&from=").append(langFrom).append("&to=").append(langTo);
+        String json = "[{\"Text\": \"" + text + "\"}]";
         String res = HttpConnectionUtils.postJSON(urlBuilder.toString(), json, p);
         JsonNode root = mapper.readTree(res);
         JsonNode translations = root.get(0).get("translations");

@@ -38,7 +38,7 @@ import org.omegat.util.OStrings;
 import org.omegat.util.Preferences;
 import org.omegat.util.StringUtil;
 
-import java.awt.Window;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.OptionalLong;
@@ -75,6 +75,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     protected static final String PROPERTY_NEURAL = "microsoft.neural";
     protected static final String PROPERTY_V2 = "microsoft.v2";
     protected static final String PROPERTY_SUBSCRIPTION_KEY = "microsoft.api.subscription_key";
+    protected static final String PROPERTY_REGION = "microsoft.api.region";
 
     private static final ResourceBundle BUNDLE = ResourceBundle.getBundle("AzureTranslatorBundle");
 
@@ -313,14 +314,16 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
      * @see <a href="https://sourceforge.net/p/omegat/feature-requests/1366/">Add support for
      * Microsoft neural machine translation</a>
      */
-    protected static boolean isNeural() {
-        String value = Preferences.getPreference(PROPERTY_NEURAL);
-        return Boolean.parseBoolean(value);
+    protected boolean isNeural() {
+        return Preferences.isPreference(PROPERTY_NEURAL);
     }
 
-    protected static boolean isV2() {
-        String value = Preferences.getPreference(PROPERTY_V2);
-        return Boolean.parseBoolean(value);
+    protected boolean isV2() {
+        return Preferences.isPreference(PROPERTY_V2);
+    }
+
+    protected String getRegion() {
+        return Preferences.getPreferenceDefault(MicrosoftTranslatorAzure.PROPERTY_REGION, "");
     }
 
     @Override
@@ -339,12 +342,17 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
                 setKey(panel.valueField1.getText().trim(), panel.temporaryCheckBox.isSelected());
                 Preferences.setPreference(PROPERTY_NEURAL, neuralCheckBox.isSelected());
                 Preferences.setPreference(PROPERTY_V2, v2CheckBox.isSelected());
+                Preferences.setPreference(
+                        PROPERTY_REGION, panel.valueField2.getText().trim());
             }
         };
         dialog.panel.valueLabel1.setText(getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_KEY_LABEL"));
         dialog.panel.valueField1.setText(getCredential(PROPERTY_SUBSCRIPTION_KEY));
-        dialog.panel.valueLabel2.setVisible(false);
-        dialog.panel.valueField2.setVisible(false);
+        int height = dialog.panel.getFont().getSize();
+        dialog.panel.valueField1.setPreferredSize(new Dimension(height * 24, height * 2));
+        dialog.panel.valueLabel2.setText(getString("MT_ENGINE_MICROSOFT_SUBSCRIPTION_REGION"));
+        dialog.panel.valueField2.setText(Preferences.getPreferenceDefault(PROPERTY_REGION, ""));
+        dialog.panel.valueField2.setPreferredSize(new Dimension(height * 12, height * 2));
 
         boolean isCredentialStoredTemporarily =
                 !CredentialsManager.getInstance().isStored(PROPERTY_SUBSCRIPTION_KEY)

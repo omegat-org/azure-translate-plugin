@@ -66,6 +66,7 @@ public class TestMicrosoftTranslatorAzure {
     private static final String V2_API_PATH = "/v2/http.svc/Translate";
     private static final String V3_API_PATH = "/translate";
     private static final String KEY = "abcdefg";
+    private static final String REGION = "uswest";
 
     private File tmpDir;
 
@@ -168,27 +169,21 @@ public class TestMicrosoftTranslatorAzure {
         prefs.setPreference(MicrosoftTranslatorAzure.ALLOW_MICROSOFT_TRANSLATOR_AZURE, true);
         prefs.setPreference(MicrosoftTranslatorAzure.PROPERTY_V2, false);
         prefs.setPreference(MicrosoftTranslatorAzure.PROPERTY_NEURAL, false);
+        prefs.setPreference(MicrosoftTranslatorAzure.PROPERTY_REGION, REGION);
         init(prefsFile.getAbsolutePath());
 
         String text = "Buy tomorrow";
         String translation = "Morgen kaufen gehen ein";
 
         WireMock wireMock = wireMockRuntimeInfo.getWireMock();
-        wireMock.register(post(urlPathEqualTo(TOKEN_PATH))
-                .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Accept", equalTo("application/jwt"))
-                .withHeader("Ocp-Apim-Subscription-Key", equalTo(KEY))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("PSEUDOTOKEN")));
         Map<String, StringValuePattern> expectedParams = new HashMap<>();
         expectedParams.put("api-version", equalTo("3.0"));
         expectedParams.put("from", equalTo("en"));
         expectedParams.put("to", equalTo("de"));
         wireMock.register(post(urlPathEqualTo(V3_API_PATH))
                 .withQueryParams(expectedParams)
-                .withHeader("Authentication", containing("PSEUDOTOKEN"))
+                .withHeader("Ocp-Apim-Subscription-Key", equalTo(KEY))
+                .withHeader("Ocp-Apim-Subscription-Region", equalTo(REGION))
                 .withHeader("Content-Type", containing("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)

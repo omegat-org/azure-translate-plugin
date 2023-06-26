@@ -13,7 +13,7 @@ plugins {
 version = "0.1.2"
 
 omegat {
-    version = "5.7.1"
+    version = "5.8.0"
     pluginClass = "org.omegat.connectors.machinetranslators.azure.MicrosoftTranslatorAzure"
 }
 

@@ -76,7 +76,7 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
         p.put("from", langFrom);
         p.put("to", langTo);
         p.put("contentType", "text/plain");
-        if (MicrosoftTranslatorAzure.isNeural()) {
+        if (parent.isNeural()) {
             p.put("category", "generalnn");
         }
 

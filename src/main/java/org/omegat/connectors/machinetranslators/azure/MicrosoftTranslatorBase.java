@@ -48,14 +48,13 @@ import java.util.TreeMap;
 public abstract class MicrosoftTranslatorBase {
 
     protected static final String DEFAULT_URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
-    protected String urlToken;
+    protected String urlToken = null;
     protected String accessToken;
 
-    private final MicrosoftTranslatorAzure parent;
+    protected final MicrosoftTranslatorAzure parent;
 
     public MicrosoftTranslatorBase(MicrosoftTranslatorAzure parent) {
         this.parent = parent;
-        this.urlToken = DEFAULT_URL_TOKEN;
     }
 
     protected void setTokenUrl(String url) {
@@ -63,6 +62,9 @@ public abstract class MicrosoftTranslatorBase {
     }
 
     protected void requestToken(String key) throws Exception {
+        if (urlToken == null) {
+            urlToken = DEFAULT_URL_TOKEN;
+        }
         Map<String, String> headers = new TreeMap<>();
         headers.put("Ocp-Apim-Subscription-Key", key);
         headers.put("Content-Type", "application/json");

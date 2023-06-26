@@ -27,10 +27,10 @@
  */
 package org.omegat.connectors.machinetranslators.azure;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.omegat.util.HttpConnectionUtils;
-import org.omegat.util.Language;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -48,15 +48,33 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
 
     private static final String DEFAULT_URL = "https://api.cognitive.microsofttranslator.com/translate";
     private String urlTranslate;
+    private ObjectMapper mapper;
 
     public AzureTranslatorV3(MicrosoftTranslatorAzure parent) {
         super(parent);
         urlTranslate = DEFAULT_URL;
+        mapper = new ObjectMapper();
     }
 
     @Override
     protected String requestTranslate(String langFrom, String langTo, String text) throws Exception {
-        return null;
+        Map<String, String> p = new TreeMap<>();
+        p.put("Authentication", "Bearer " + accessToken);
+        StringBuilder urlBuilder = new StringBuilder(urlTranslate);
+        urlBuilder.append("?from=").append(langFrom).append("&").append("to=").append(langTo);
+        urlBuilder.append("&api-version=3.0");
+        String json = "[{'Text': '" + text + "'}]";
+        String res = HttpConnectionUtils.postJSON(urlBuilder.toString(), json, p);
+        JsonNode root = mapper.readTree(res);
+        JsonNode translations = root.get(0).get("translations");
+        if (translations == null) {
+            return null;
+        }
+        JsonNode translation = translations.get(0).get("text");
+        if (translation == null) {
+            return null;
+        }
+        return translation.asText();
     }
 
     /**

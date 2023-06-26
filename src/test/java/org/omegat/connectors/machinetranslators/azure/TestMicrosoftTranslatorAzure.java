@@ -154,13 +154,13 @@ public class TestMicrosoftTranslatorAzure {
                         .withHeader("Content-Type", "text/plain")
                         .withBody("PSEUDOTOKEN")));
         Map<String, StringValuePattern> expectedParams = new HashMap<>();
-        expectedParams.put("Authorization", containing("PSEUDOTOKEN"));
         expectedParams.put("api-version", equalTo("3.0"));
         expectedParams.put("from", equalTo("en"));
         expectedParams.put("to", equalTo("de"));
-        expectedParams.put("contentType", equalTo("application/json; charset=UTF-8"));
-        wireMock.register(get(urlPathEqualTo(V3_API_PATH))
+        wireMock.register(post(urlPathEqualTo(V3_API_PATH))
                 .withQueryParams(expectedParams)
+                .withHeader("Authentication", containing("PSEUDOTOKEN"))
+                .withHeader("Content-Type", containing("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")

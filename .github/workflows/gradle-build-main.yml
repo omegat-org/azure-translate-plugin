@@ -3,7 +3,7 @@ name: Run Gradle test
 on:
   push:
     branches:
-      - master
+      - main
       - releases/*
 
 jobs:

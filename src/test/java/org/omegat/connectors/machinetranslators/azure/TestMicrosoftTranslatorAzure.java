@@ -116,11 +116,11 @@ public class TestMicrosoftTranslatorAzure {
                         .withHeader("Content-Type", "text/plain")
                         .withBody("PSEUDOTOKEN")));
         Map<String, StringValuePattern> expectedParams = new HashMap<>();
-        expectedParams.put("appid", containing("PSEUDOTOKEN"));
         expectedParams.put("text", equalTo(text));
         expectedParams.put("from", equalTo("en"));
         expectedParams.put("to", equalTo("de"));
-        expectedParams.put("contentType", equalTo("text/plain"));
+        expectedParams.put("appid", containing("PSEUDOTOKEN"));
+        expectedParams.put("contentType", containing("text/plain"));
         wireMock.register(get(urlPathEqualTo(V2_API_PATH))
                 .withQueryParams(expectedParams)
                 .willReturn(aResponse()
@@ -159,6 +159,11 @@ public class TestMicrosoftTranslatorAzure {
         }
 
         @Override
+        protected String getRegion() {
+            return REGION;
+        }
+
+        @Override
         protected void setKey(String val, boolean temporary) {}
     }
 
@@ -192,8 +197,7 @@ public class TestMicrosoftTranslatorAzure {
         int port = wireMockRuntimeInfo.getHttpPort();
         MicrosoftTranslatorAzure azure = new MicrosoftTranslatorAzureMock();
         AzureTranslatorV3 translator = new AzureTranslatorV3(azure);
-        translator.setTokenUrl(String.format("http://localhost:%d%s", port, TOKEN_PATH));
-        translator.setUrl(String.format("http://localhost:%d%s", port, V3_API_PATH));
+        translator.setUrl(String.format("http://localhost:%d%s?api-version=3.0", port, V3_API_PATH));
         String result = translator.translate(new Language("EN"), new Language("DE"), text);
         Assertions.assertEquals(translation, result);
     }

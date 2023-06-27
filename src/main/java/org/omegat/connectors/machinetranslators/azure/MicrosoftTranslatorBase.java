@@ -47,29 +47,10 @@ import java.util.TreeMap;
  */
 public abstract class MicrosoftTranslatorBase {
 
-    protected static final String DEFAULT_URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
-    protected String urlToken = null;
-    protected String accessToken;
-
     protected final MicrosoftTranslatorAzure parent;
 
     public MicrosoftTranslatorBase(MicrosoftTranslatorAzure parent) {
         this.parent = parent;
-    }
-
-    protected void setTokenUrl(String url) {
-        urlToken = url;
-    }
-
-    protected void requestToken(String key) throws Exception {
-        if (urlToken == null) {
-            urlToken = DEFAULT_URL_TOKEN;
-        }
-        Map<String, String> headers = new TreeMap<>();
-        headers.put("Ocp-Apim-Subscription-Key", key);
-        headers.put("Content-Type", "application/json");
-        headers.put("Accept", "application/jwt");
-        accessToken = HttpConnectionUtils.post(urlToken, Collections.emptyMap(), headers);
     }
 
     /**
@@ -100,24 +81,7 @@ public abstract class MicrosoftTranslatorBase {
     protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
         String langFrom = checkMSLang(sLang);
         String langTo = checkMSLang(tLang);
-        String translation;
-        if (accessToken == null) {
-            requestToken(parent.getKey());
-            translation = requestTranslate(langFrom, langTo, text);
-        } else {
-            try {
-                translation = requestTranslate(langFrom, langTo, text);
-            } catch (HttpConnectionUtils.ResponseError ex) {
-                if (ex.code == 400) {
-                    Log.log("Re-fetching Microsoft Translator API token due to 400 response");
-                    requestToken(parent.getKey());
-                    translation = requestTranslate(langFrom, langTo, text);
-                } else {
-                    throw ex;
-                }
-            }
-        }
-        return translation;
+        return requestTranslate(langFrom, langTo, text);
     }
 
     protected abstract String requestTranslate(String langFrom, String langTo, String text) throws Exception;

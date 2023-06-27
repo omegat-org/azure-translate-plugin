@@ -31,6 +31,7 @@ package org.omegat.connectors.machinetranslators.azure;
 import org.omegat.util.HttpConnectionUtils;
 import org.omegat.util.Log;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -48,6 +49,8 @@ import java.util.regex.Pattern;
  */
 public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
 
+    protected static final String DEFAULT_URL_TOKEN = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
+    protected String urlToken = null;
     protected String accessToken;
 
     private static final String DEFAULT_URL = "https://api.microsofttranslator.com/v2/http.svc/Translate";
@@ -60,6 +63,20 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
         urlTranslate = DEFAULT_URL;
     }
 
+    protected void setTokenUrl(String url) {
+        urlToken = url;
+    }
+
+    protected void requestToken(String key) throws Exception {
+        if (urlToken == null) {
+            urlToken = DEFAULT_URL_TOKEN;
+        }
+        Map<String, String> headers = new TreeMap<>();
+        headers.put("Ocp-Apim-Subscription-Key", key);
+        headers.put("Content-Type", "application/json");
+        headers.put("Accept", "application/jwt");
+        accessToken = HttpConnectionUtils.post(urlToken, Collections.emptyMap(), headers);
+    }
     /**
      * Method for test.
      * @param url alternative url.
@@ -70,6 +87,9 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
 
     @Override
     protected String requestTranslate(String langFrom, String langTo, String text) throws Exception {
+        if (accessToken == null) {
+            requestToken(parent.getKey());
+        }
         Map<String, String> p = new TreeMap<>();
         p.put("appid", "Bearer " + accessToken);
         p.put("text", text);
@@ -79,8 +99,18 @@ public class MicrosoftTranslatorV2 extends MicrosoftTranslatorBase {
         if (parent.isNeural()) {
             p.put("category", "generalnn");
         }
-
-        String r = HttpConnectionUtils.get(urlTranslate, p, null);
+        String r;
+        try {
+            r = HttpConnectionUtils.get(urlTranslate, p, null);
+        } catch (HttpConnectionUtils.ResponseError ex) {
+            if (ex.code == 400) {
+                Log.log("Re-fetching Microsoft Translator API token due to 400 response");
+                requestToken(parent.getKey());
+                return requestTranslate(langFrom, langTo, text);
+            } else {
+                throw ex;
+            }
+        }
         Matcher m = RE_RESPONSE.matcher(r);
         if (m.matches()) {
             String translatedText = m.group(1);

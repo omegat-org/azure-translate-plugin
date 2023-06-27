@@ -31,6 +31,10 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))

@@ -51,8 +51,6 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
         urlTranslate = DEFAULT_URL;
     }
 
-    protected void requestToken(String key) {}
-
     @Override
     protected String requestTranslate(String langFrom, String langTo, String text) throws Exception {
         Map<String, String> p = new TreeMap<>();

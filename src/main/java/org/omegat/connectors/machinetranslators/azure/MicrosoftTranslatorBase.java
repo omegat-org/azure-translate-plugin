@@ -27,13 +27,7 @@
  */
 package org.omegat.connectors.machinetranslators.azure;
 
-import org.omegat.util.HttpConnectionUtils;
 import org.omegat.util.Language;
-import org.omegat.util.Log;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Support for Microsoft Translator API machine translation.

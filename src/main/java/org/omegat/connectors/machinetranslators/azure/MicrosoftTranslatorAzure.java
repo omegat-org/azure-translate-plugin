@@ -83,7 +83,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
 
     /**
      * Machine translation implementation can use this cache for skip requests
-     * twice. Cache will be cleared when project change.
+     * twice. Cache will be cleared when the project changes.
      */
     private final Cache<String, String> cache;
 
@@ -113,7 +113,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     /**
      * Creat cache object.
      * <p>
-     * MT connectors can override cache size and invalidate policy.
+     * MT connectors can override cache size and invalidate the policy.
      * @param name name of cache which should be unique among MT connectors.
      * @return Cache object
      */
@@ -201,6 +201,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     @Override
     public void setEnabled(boolean b) {
         enabled = b;
+        Preferences.setPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE, true);
     }
 
     @Override

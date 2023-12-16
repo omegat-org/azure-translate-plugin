@@ -1,4 +1,6 @@
 import org.gradle.crypto.checksum.Checksum
+import java.io.FileInputStream
+import java.util.*
 
 plugins {
     java
@@ -7,15 +9,43 @@ plugins {
     id("org.gradle.crypto.checksum") version "1.4.0"
     id("com.diffplug.spotless") version "6.12.0"
     id("org.omegat.gradle") version "2.0.0-rc2"
+    id("com.palantir.git-version") version "3.0.0" apply false
 }
 
-version = "0.2.0"
+val dotgit = project.file(".git")
+if (dotgit.exists()) {
+    apply(plugin = "com.palantir.git-version")
+    val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
+    val details = versionDetails()
+    val baseVersion = details.lastTag.substring(1)
+    version = when {
+        details.isCleanTag -> baseVersion
+        else -> baseVersion + "-" + details.commitDistance + "-" + details.gitHash + "-SNAPSHOT"
+    }
+} else {
+    val gitArchival = project.file(".git-archival.properties")
+    val props = Properties()
+    props.load(FileInputStream(gitArchival))
+    val versionDescribe = props.getProperty("describe")
+    val regex = "^v\\d+\\.\\d+\\.\\d+$".toRegex()
+    version = when {
+        regex.matches(versionDescribe) -> versionDescribe.substring(1)
+        else -> versionDescribe.substring(1) + "-SNAPSHOT"
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
+}
 
 omegat {
     version("5.8.0") // target java version is 8
     pluginClass("org.omegat.connectors.machinetranslators.azure.MicrosoftTranslatorAzure")
     packIntoJarFileFilter = {it.exclude("META-INF/**/*", "module-info.class", "kotlin/**/*")}
 }
+
 
 repositories {
     mavenCentral()
@@ -33,12 +63,6 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
-    }
 }
 
 distributions {
@@ -61,10 +85,8 @@ signing {
             val signingPassword: String? by project
             useInMemoryPgpKeys(signingKey, signingPassword)
         }
-
         "signing.keyId" -> {/* do nothing */
         }
-
         "signing.gnupg.keyName" -> {
             useGpgCmd()
         }

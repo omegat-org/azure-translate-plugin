@@ -28,8 +28,7 @@
 package org.omegat.connectors.machinetranslators.azure;
 
 import org.omegat.core.Core;
-import org.omegat.core.CoreEvents;
-import org.omegat.core.events.IProjectEventListener;
+import org.omegat.core.machinetranslators.BaseCachedTranslate;
 import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.gui.exttrans.MTConfigDialog;
 import org.omegat.util.CredentialsManager;
@@ -38,22 +37,14 @@ import org.omegat.util.OStrings;
 import org.omegat.util.Preferences;
 import org.omegat.util.StringUtil;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.OptionalLong;
 import java.util.ResourceBundle;
 
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.expiry.CreatedExpiryPolicy;
-import javax.cache.expiry.Duration;
-import javax.cache.spi.CachingProvider;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-
-import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -66,9 +57,7 @@ import com.github.benmanes.caffeine.jcache.configuration.CaffeineConfiguration;
  * @see <a href="https://www.microsoft.com/en-us/translator/translatorapi.aspx">Translator API</a>
  * @see <a href="https://docs.microsofttranslator.com/text-translate.html">Translate Method reference</a>
  */
-public class MicrosoftTranslatorAzure implements IMachineTranslation {
-
-    protected boolean enabled;
+public class MicrosoftTranslatorAzure extends BaseCachedTranslate implements IMachineTranslation {
 
     protected static final String ALLOW_MICROSOFT_TRANSLATOR_AZURE = "allow_microsoft_translator_azure";
 
@@ -82,15 +71,10 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     private MicrosoftTranslatorBase translator = null;
 
     /**
-     * Machine translation implementation can use this cache for skip requests
-     * twice. Cache will be cleared when the project changes.
-     */
-    private final Cache<String, String> cache;
-
-    /**
      * Constructor of the connector.
      */
     public MicrosoftTranslatorAzure() {
+        super();
         if (Core.getMainWindow() != null) {
             JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem();
             menuItem.setText(getName());
@@ -105,40 +89,6 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
                 enabled = newValue;
             });
         }
-
-        cache = getCacheLayer(getName());
-        setCacheClearPolicy();
-    }
-
-    /**
-     * Creat cache object.
-     * <p>
-     * MT connectors can override cache size and invalidate the policy.
-     * @param name name of cache which should be unique among MT connectors.
-     * @return Cache object
-     */
-    protected Cache<String, String> getCacheLayer(String name) {
-        CachingProvider provider = Caching.getCachingProvider();
-        CacheManager manager = provider.getCacheManager();
-        Cache<String, String> cache1 = manager.getCache(name);
-        if (cache1 != null) {
-            return cache1;
-        }
-        CaffeineConfiguration<String, String> config = new CaffeineConfiguration<>();
-        config.setExpiryPolicyFactory(() -> new CreatedExpiryPolicy(Duration.ONE_DAY));
-        config.setMaximumSize(OptionalLong.of(1_000));
-        return manager.createCache(name, config);
-    }
-
-    /**
-     * Register cache clear policy.
-     */
-    protected void setCacheClearPolicy() {
-        CoreEvents.registerProjectChangeListener(eventType -> {
-            if (eventType.equals(IProjectEventListener.PROJECT_CHANGE_TYPE.CLOSE)) {
-                cache.clear();
-            }
-        });
     }
 
     /**
@@ -146,7 +96,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
      * @param key bundle key.
      * @return a localized string.
      */
-    public static String getString(String key) {
+    static String getString(String key) {
         return BUNDLE.getString(key);
     }
 
@@ -194,47 +144,8 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     }
 
     @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean b) {
-        enabled = b;
-        Preferences.setPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE, true);
-    }
-
-    @Override
-    public String getTranslation(Language sLang, Language tLang, String text) throws Exception {
-        if (enabled) {
-            return translate(sLang, tLang, text);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public String getCachedTranslation(Language sLang, Language tLang, String text) {
-        if (enabled) {
-            String prev;
-            if (text.length() > 10000) {
-                prev = getFromCache(sLang, tLang, text.substring(0, 9997) + "...");
-            } else {
-                prev = getFromCache(sLang, tLang, text);
-            }
-            if (prev != null) {
-                return prev;
-            }
-            try {
-                String translation = translate(sLang, tLang, text);
-                if (translation != null) {
-                    putToCache(sLang, tLang, text, translation);
-                }
-                return translation;
-            } catch (Exception ignored) {
-            }
-        }
-        return null;
+    protected String getPreferenceName() {
+        return ALLOW_MICROSOFT_TRANSLATOR_AZURE;
     }
 
     /**
@@ -287,21 +198,14 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
         return key;
     }
 
-    protected synchronized String translate(Language sLang, Language tLang, String text) throws Exception {
+    @Override
+    protected String translate(Language sLang, Language tLang, String text) throws Exception {
         if (isV2() && (translator == null || translator instanceof AzureTranslatorV3)) {
             translator = new MicrosoftTranslatorV2(this);
         } else if (translator == null || translator instanceof MicrosoftTranslatorV2) {
             translator = new AzureTranslatorV3(this);
         }
         return translator.translate(sLang, tLang, text);
-    }
-
-    protected String getFromCache(Language sLang, Language tLang, String text) {
-        return cache.get(sLang + "/" + tLang + "/" + text);
-    }
-
-    protected void putToCache(Language sLang, Language tLang, String text, String result) {
-        cache.put(sLang.toString() + "/" + tLang.toString() + "/" + text, result);
     }
 
     @Override

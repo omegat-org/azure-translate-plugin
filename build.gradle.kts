@@ -7,14 +7,15 @@ plugins {
     distribution
     id("org.gradle.crypto.checksum") version "1.4.0"
     id("com.diffplug.spotless") version "6.12.0"
-    id("org.omegat.gradle") version "1.5.9"
+    id("org.omegat.gradle") version "2.0.0-rc2"
 }
 
 version = "0.2.0"
 
 omegat {
-    version = "5.8.0"
-    pluginClass = "org.omegat.connectors.machinetranslators.azure.MicrosoftTranslatorAzure"
+    version("5.8.0") // target java version is 8
+    pluginClass("org.omegat.connectors.machinetranslators.azure.MicrosoftTranslatorAzure")
+    packIntoJarFileFilter = {it.exclude("META-INF/**/*", "module-info.class", "kotlin/**/*")}
 }
 
 repositories {

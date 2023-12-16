@@ -3,7 +3,6 @@ import org.gradle.crypto.checksum.Checksum
 plugins {
     java
     signing
-    checkstyle
     distribution
     id("org.gradle.crypto.checksum") version "1.4.0"
     id("com.diffplug.spotless") version "6.12.0"
@@ -40,11 +39,6 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
-}
-
-checkstyle {
-    isIgnoreFailures = true
-    toolVersion = "7.1"
 }
 
 distributions {

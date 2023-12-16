@@ -25,11 +25,57 @@
 
 package org.omegat.connectors.machinetranslators.azure;
 
+import org.omegat.util.Preferences;
+import org.omegat.util.PreferencesImpl;
+import org.omegat.util.PreferencesXML;
+import org.omegat.util.RuntimePreferences;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import wiremock.org.apache.commons.io.FileUtils;
 
 public class TestAzureTranslatorV3 {
+
+    private File tmpDir;
+
+    /**
+     * Prepare a temporary directory.
+     * @throws IOException when I/O error.
+     */
+    @BeforeEach
+    public final void setUp() throws IOException {
+        tmpDir = Files.createTempDirectory("omegat").toFile();
+        Assertions.assertTrue(tmpDir.isDirectory());
+        File prefsFile = new File(tmpDir, Preferences.FILE_PREFERENCES);
+        Preferences.IPreferences prefs = new PreferencesImpl(new PreferencesXML(null, prefsFile));
+        prefs.setPreference(MicrosoftTranslatorAzure.ALLOW_MICROSOFT_TRANSLATOR_AZURE, true);
+        init(prefsFile.getAbsolutePath());
+    }
+
+    /**
+     * Clean up a temporary directory.
+     * @throws IOException when I/O error.
+     */
+    @AfterEach
+    public final void tearDown() throws IOException {
+        FileUtils.deleteDirectory(tmpDir);
+    }
+
+    /**
+     * Initialize preferences for test.
+     * @param configDir to create omegat.prefs.
+     */
+    public static synchronized void init(String configDir) {
+        RuntimePreferences.setConfigDir(configDir);
+        Preferences.init();
+    }
 
     @Test
     public void testCreateJsonRequest() throws JsonProcessingException {

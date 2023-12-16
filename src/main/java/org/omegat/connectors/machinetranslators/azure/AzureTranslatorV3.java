@@ -29,9 +29,11 @@ package org.omegat.connectors.machinetranslators.azure;
 
 import org.omegat.util.HttpConnectionUtils;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,10 +58,9 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
         Map<String, String> p = new TreeMap<>();
         p.put("Ocp-Apim-Subscription-Key", parent.getKey());
         p.put("Ocp-Apim-Subscription-Region", parent.getRegion());
-        StringBuilder urlBuilder = new StringBuilder(urlTranslate);
-        urlBuilder.append("&from=").append(langFrom).append("&to=").append(langTo);
-        String json = "[{\"Text\": \"" + text + "\"}]";
-        String res = HttpConnectionUtils.postJSON(urlBuilder.toString(), json, p);
+        String url = urlTranslate + "&from=" + langFrom + "&to=" + langTo;
+        String json = createJsonRequest(text);
+        String res = HttpConnectionUtils.postJSON(url, json, p);
         JsonNode root = mapper.readTree(res);
         JsonNode translations = root.get(0).get("translations");
         if (translations == null) {
@@ -78,5 +79,14 @@ public class AzureTranslatorV3 extends MicrosoftTranslatorBase {
      */
     public void setUrl(String url) {
         urlTranslate = url;
+    }
+
+    /**
+     * Create Watson request and return as json string.
+     */
+    protected String createJsonRequest(String trText) throws JsonProcessingException {
+        Map<String, Object> param = new TreeMap<>();
+        param.put("text", trText);
+        return new ObjectMapper().writeValueAsString(Collections.singletonList(param));
     }
 }

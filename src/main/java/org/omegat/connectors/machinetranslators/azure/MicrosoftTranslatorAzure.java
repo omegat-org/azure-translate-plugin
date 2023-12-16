@@ -201,7 +201,7 @@ public class MicrosoftTranslatorAzure implements IMachineTranslation {
     @Override
     public void setEnabled(boolean b) {
         enabled = b;
-        Preferences.setPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE, true);
+        Preferences.setPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE, b);
     }
 
     @Override

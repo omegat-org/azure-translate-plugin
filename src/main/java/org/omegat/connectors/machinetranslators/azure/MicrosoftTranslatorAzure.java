@@ -44,7 +44,6 @@ import java.lang.reflect.Method;
 import java.util.ResourceBundle;
 
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
 
 /**
  * Support for Microsoft Translator API machine translation.
@@ -75,20 +74,6 @@ public class MicrosoftTranslatorAzure extends BaseCachedTranslate implements IMa
      */
     public MicrosoftTranslatorAzure() {
         super();
-        if (Core.getMainWindow() != null) {
-            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem();
-            menuItem.setText(getName());
-            menuItem.addActionListener(e -> setEnabled(menuItem.isSelected()));
-            enabled = Preferences.isPreference(ALLOW_MICROSOFT_TRANSLATOR_AZURE);
-            menuItem.setState(enabled);
-            Core.getMainWindow().getMainMenu().getMachineTranslationMenu().add(menuItem);
-            // Preferences listener
-            Preferences.addPropertyChangeListener(ALLOW_MICROSOFT_TRANSLATOR_AZURE, e -> {
-                boolean newValue = (Boolean) e.getNewValue();
-                menuItem.setSelected(newValue);
-                enabled = newValue;
-            });
-        }
     }
 
     /**
